@@ -10,8 +10,8 @@ app.use(cors());
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
+    user: process.env.EMAIL_USER, // Debes tener esta variable configurada en Render
+    pass: process.env.EMAIL_PASS  // Debes tener esta variable configurada en Render
   }
 });
 
@@ -30,7 +30,7 @@ app.post('/api/send-otp', (req, res) => {
   console.log(`Generated OTP: ${otp}`);
 
   const mailOptions = {
-    from: process.env.EMAIL_USER,
+    from: process.env.EMAIL_USER, // Usa la variable de entorno para el correo de envío
     to: email,
     subject: 'Your OTP Code',
     text: `Your OTP code is: ${otp}`
@@ -52,10 +52,16 @@ app.post('/api/verify-otp', (req, res) => {
     delete otps[email];
     return res.status(200).send('OTP verified successfully');
   }
-  
+
   return res.status(400).send('Invalid OTP');
 });
 
-// Exportar la API para Vercel
+// Escuchar en el puerto correcto proporcionado por Render
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
+});
+
 module.exports = app;
+
 
