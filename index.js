@@ -1,8 +1,61 @@
-const express = require("express");
+const express = require('express');
+const nodemailer = require('nodemailer');
+const cors = require('cors');
+
 const app = express();
+app.use(cors());
+app.use(express.json());
 
-app.get("/", (req, res) => res.send("Express on Vercel"));
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: 'intranetd6@gmail.com',
+    pass:  'bicd dpvg gcwy ihyc'
+  }
+});
 
-app.listen(3000, () => console.log("Server ready on port 3000."));
+let otps = {};
+
+const generateOtp = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
+// Ruta para enviar OTP
+app.post('/api/send-otp', (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).send('Email is required');
+
+  const otp = generateOtp();
+  otps[email] = otp;
+
+  const mailOptions = {
+    from: 'intranetd6@gmail.com',
+    to: email,
+    subject: 'Your OTP Code',
+    text: `Your OTP code is: ${otp}`
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.log(error);
+      return res.status(500).send('Error sending email');
+    }
+    console.log('Email sent: ' + info.response);
+    res.status(200).send({ otp });
+  });
+});
+
+// Ruta para verificar OTP
+app.post('/api/verify-otp', (req, res) => {
+  const { email, otp } = req.body;
+  if (!email || !otp) return res.status(400).send('Email and OTP are required');
+
+  if (otps[email] && otps[email] === otp) {
+    delete otps[email];
+    return res.status(200).send('OTP verified successfully');
+  } else {
+    return res.status(400).send('Invalid OTP');
+  }
+});
 
 module.exports = app;
