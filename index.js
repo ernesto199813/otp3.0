@@ -21,6 +21,67 @@ const generateOtp = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
+const getOtpHtmlTemplate = (otp) => {
+  return `
+  <!DOCTYPE html>
+  <html>
+  <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>OTP Verification</title>
+      <style>
+          body {
+              font-family: Arial, sans-serif;
+              background-color: #f4f4f4;
+              text-align: center;
+              padding: 20px;
+          }
+          .container {
+              background-color: #ffffff;
+              padding: 20px;
+              border-radius: 10px;
+              box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+              max-width: 500px;
+              margin: auto;
+          }
+          h1 {
+              color: #333;
+          }
+          .otp {
+              font-size: 24px;
+              font-weight: bold;
+              color: #ffffff;
+              background-color: #470181;
+              padding: 10px;
+              display: inline-block;
+              border-radius: 5px;
+              letter-spacing: 2px;
+          }
+          p {
+              font-size: 16px;
+              color: #555;
+          }
+          .footer {
+              margin-top: 20px;
+              font-size: 14px;
+              color: #888;
+          }
+      </style>
+  </head>
+  <body>
+      <div class="container">
+          <h1>🔐 Codigo de seguridad OTP 🔐</h1>
+          <p>Hola,Gracias por iniciar sesion. Para completar tu verificación, usa el siguiente código:</p>
+          <div class="otp">${otp}</div>
+          <p>Este código es válido por 10 minutos. No lo compartas con nadie.</p>
+          <p>Si no solicitaste este código, ignora este mensaje.</p>
+          <div class="footer">© 2025 Intranet Ces. Todos los derechos reservados.</div>
+      </div>
+  </body>
+  </html>`;
+};
+
+
 // Ruta para enviar OTP
 app.post('/send-otp', (req, res) => {
   const { email } = req.body;
@@ -37,7 +98,7 @@ app.post('/send-otp', (req, res) => {
     from: process.env.EMAIL_USER,
     to: email,
     subject: 'Your OTP Code',
-    text: `Your OTP code is: ${otp}`
+    html: getOtpHtmlTemplate(otp)
   };
 
   transporter.sendMail(mailOptions, (error, info) => {
@@ -46,7 +107,7 @@ app.post('/send-otp', (req, res) => {
       res.status(500).send('Error sending email');
     } else {
       console.log('Email sent: ' + info.response);
-      res.status(200).send({ otp }); // Enviar OTP generado al cliente para verificación (solo para pruebas)
+      res.status(200).send('OTP sent successfully');
     }
   });
 });
@@ -55,7 +116,7 @@ app.post('/send-otp', (req, res) => {
 app.post('/verify-otp', (req, res) => {
   const { email, otp } = req.body;
 
-  if (!email || !otp) { // Corrección aquí
+  if (!email || !otp) {
     return res.status(400).send('Email and OTP are required');
   }
 
